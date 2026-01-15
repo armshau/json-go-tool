@@ -19,8 +19,8 @@ function setOutput(code, language) {
     successMsg.style.display = 'inline-block';
     errorMsg.style.display = 'none';
 
-    // Reset scroll
-    outputElement.scrollTop = 0;
+    // Reset scroll (on the <pre> tag, which is the parent)
+    outputElement.parentElement.scrollTop = 0;
 }
 
 function setError(message) {
