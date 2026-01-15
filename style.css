@@ -1,0 +1,56 @@
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    max-width: 95%;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.container {
+    display: flex;
+    gap: 1rem;
+    height: 60vh;
+}
+
+textarea {
+    flex: 1;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-family: monospace;
+    resize: none;
+}
+
+button {
+    padding: 0.8rem 2rem;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+.success {
+    color: green;
+    display: none;
+    margin-top: 0.5rem;
+}
+
+.error {
+    color: red;
+    display: none;
+    margin-top: 0.5rem;
+}
+
+.trust-badge {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
