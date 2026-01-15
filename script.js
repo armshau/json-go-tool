@@ -93,7 +93,74 @@ function convertJSON() {
         jsonToPython();
     } else if (lang === 'csharp') {
         jsonToCSharp();
+    } else if (lang === 'typescript') {
+        jsonToTypeScript();
     }
+}
+
+// --- TypeScript Conversion Logic ---
+function jsonToTypeScript() {
+    const input = document.getElementById('input');
+
+    try {
+        const obj = JSON.parse(input.value);
+
+        const interfaces = [];
+        const rootInterface = generateTypeScriptInterface(obj, "Root", interfaces);
+
+        let tsCode = rootInterface;
+        if (interfaces.length > 0) {
+            tsCode += "\n\n" + interfaces.join("\n\n");
+        }
+
+        setOutput(tsCode, 'typescript');
+    } catch (e) {
+        setError(e.message);
+    }
+}
+
+function generateTypeScriptInterface(obj, interfaceName, interfaceCollector) {
+    let sb = `export interface ${interfaceName} {\n`;
+
+    for (const key in obj) {
+        const value = obj[key];
+        const fieldName = key; // Keep original key name for TS
+        let type = "any";
+
+        if (value === null) {
+            type = "any"; // null can be anything
+        } else if (typeof value === "string") {
+            type = "string";
+        } else if (typeof value === "number") {
+            type = "number";
+        } else if (typeof value === "boolean") {
+            type = "boolean";
+        } else if (Array.isArray(value)) {
+            let itemType = "any";
+            if (value.length > 0) {
+                const first = value[0];
+                if (typeof first === "string") itemType = "string";
+                else if (typeof first === "number") itemType = "number";
+                else if (typeof first === "boolean") itemType = "boolean";
+                else if (typeof first === "object") {
+                    const nestedInterfaceName = toPascalCase(key) + "Item";
+                    const nestedInterfaceCode = generateTypeScriptInterface(first, nestedInterfaceName, interfaceCollector);
+                    interfaceCollector.push(nestedInterfaceCode);
+                    itemType = nestedInterfaceName;
+                }
+            }
+            type = `${itemType}[]`;
+        } else if (typeof value === "object") {
+            const nestedInterfaceName = toPascalCase(key);
+            const nestedInterfaceCode = generateTypeScriptInterface(value, nestedInterfaceName, interfaceCollector);
+            interfaceCollector.push(nestedInterfaceCode);
+            type = nestedInterfaceName;
+        }
+
+        sb += `    ${fieldName}: ${type};\n`;
+    }
+    sb += "}";
+    return sb;
 }
 
 // ... existing jsonToGo ...
