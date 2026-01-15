@@ -6,6 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure Local JSON Parser</title>
     <link rel="stylesheet" href="style.css">
+
+    <!-- Highlight.js for Syntax Highlighting -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/csharp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
 </head>
 
 <body>
@@ -21,14 +31,34 @@
 
     <div class="container">
         <textarea id="input" placeholder="Paste messy JSON here..."></textarea>
-        <!-- Added Output Area for Go Struct -->
-        <textarea id="output-go" placeholder="Go Struct will appear here..."
-            style="background-color: #f8fafc; color: #334155; border-color: #cbd5e1;" readonly></textarea>
+
+        <!-- Changed Output Area to support Syntax Highlighting -->
+        <div id="output-container" style="flex: 1; position: relative;">
+            <pre
+                style="margin: 0; height: 100%; border-radius: 8px; overflow: hidden;"><code id="output-code" class="language-go" style="height: 100%; display: block; overflow: auto; background: #282c34; color: #abb2bf; padding: 1rem; border-radius: 8px;">// Code will appear here...</code></pre>
+
+            <!-- Copy Button -->
+            <button onclick="copyToClipboard()"
+                style="position: absolute; top: 10px; right: 10px; padding: 0.4rem 0.8rem; font-size: 0.8rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Copy</button>
+        </div>
     </div>
 
-    <div style="margin-top: 1rem;">
+    <div style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
         <button onclick="formatJSON()">Format JSON ✨</button>
-        <button onclick="jsonToGo()" style="background:#0ea5e9">JSON to Go 🐹</button>
+
+        <div
+            style="display: flex; align-items: center; background: #f1f5f9; padding: 0.2rem; border-radius: 6px; border: 1px solid #cbd5e1;">
+            <select id="language-select"
+                style="padding: 0.5rem; border: none; background: transparent; font-size: 1rem; cursor: pointer;">
+                <option value="go">Go Struct 🐹</option>
+                <option value="java">Java Class ☕</option>
+                <option value="python">Python Pydantic 🐍</option>
+                <option value="csharp">C# Class #️⃣</option>
+            </select>
+            <button onclick="convertJSON()" style="background:#0ea5e9; border-radius: 4px; margin-left: 0.5rem;">Convert
+                ➡️</button>
+        </div>
+
         <button onclick="minifyJSON()" style="background:#4b5563">Minify</button>
         <span id="msg-success" class="success">Formatted successfully locally!</span>
         <span id="msg-error" class="error">Invalid JSON</span>
