@@ -157,7 +157,12 @@ function generateTypeScriptInterface(obj, interfaceName, interfaceCollector) {
             type = nestedInterfaceName;
         }
 
-        sb += `    ${fieldName}: ${type};\n`;
+        const isValidIdentifier = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/;
+        if (isValidIdentifier.test(fieldName)) {
+            sb += `    ${fieldName}: ${type};\n`;
+        } else {
+            sb += `    "${fieldName}": ${type};\n`;
+        }
     }
     sb += "}";
     return sb;
@@ -258,7 +263,7 @@ function jsonToPython() {
         const classes = [];
         const rootClass = generatePythonClass(obj, "Root", classes);
 
-        let pyCode = "from pydantic import BaseModel\nfrom typing import List, Optional, Any\n\n";
+        let pyCode = "from pydantic import BaseModel, Field\nfrom typing import List, Optional, Any\n\n";
         pyCode += classes.join("\n\n");
         pyCode += "\n\n" + rootClass;
 
@@ -279,6 +284,10 @@ function jsonToPython() {
 function generatePythonClass(obj, className, classCollector) {
     let sb = `class ${className}(BaseModel):\n`;
     let hasField = false;
+
+    // Python reserved words
+    const reserved = ['class', 'def', 'return', 'import', 'from', 'if', 'else', 'for', 'while', 'pass', 'break', 'continue', 'try', 'except', 'raise', 'with', 'as', 'assert', 'yield', 'global', 'lambda'];
+    const isValidIdentifier = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 
     for (const key in obj) {
         hasField = true;
@@ -315,7 +324,34 @@ function generatePythonClass(obj, className, classCollector) {
             type = nestedClassName;
         }
 
-        sb += `    ${key}: ${type}\n`;
+        // Logic for valid python identifier checks
+        let pyName = key;
+        let needsAlias = false;
+
+        // 1. Check valid identifier
+        if (!isValidIdentifier.test(key)) {
+            pyName = key.replace(/[^a-zA-Z0-9_]/g, '_');
+            // If starts with number
+            if (/^[0-9]/.test(pyName)) {
+                pyName = "_" + pyName;
+            }
+            needsAlias = true;
+        }
+
+        // 2. Check reserved words
+        if (reserved.includes(pyName)) {
+            pyName = pyName + "_";
+            needsAlias = true;
+        }
+
+        // 3. Special case: if sanitization resulted in empty string or conflicts 
+        if (!pyName || pyName === "_") pyName = "field_" + Math.floor(Math.random() * 1000);
+
+        if (needsAlias) {
+            sb += `    ${pyName}: ${type} = Field(alias="${key}")\n`;
+        } else {
+            sb += `    ${key}: ${type}\n`;
+        }
     }
 
     if (!hasField) {
@@ -472,16 +508,30 @@ function generateJavaClass(obj, className, classCollector) {
     return sb;
 }
 
-// Helper: convert "user_id" -> "UserId"
+// Helper: convert "user_id" -> "UserId", "123key" -> "Num123Key"
 function toPascalCase(str) {
-    return str
-        .replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase())
-        .replace(/^[a-z]/, c => c.toUpperCase());
+    if (!str) return "";
+
+    // Replace non-alphanumeric chars with space
+    const clean = str.replace(/[^a-zA-Z0-9]/g, ' ');
+
+    // Split into words, capitalize each
+    const words = clean.split(/\s+/).filter(w => w.length > 0);
+
+    if (words.length === 0) return "UnknownField";
+
+    let pascal = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+
+    // If starts with digit, prepend "Num"
+    if (/^[0-9]/.test(pascal)) {
+        pascal = "Num" + pascal;
+    }
+
+    return pascal;
 }
 
 // Helper: convert "User_id" -> "userId"
 function toCamelCase(str) {
-    return str
-        .replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase())
-        .replace(/^[A-Z]/, c => c.toLowerCase());
+    const pascal = toPascalCase(str);
+    return pascal.charAt(0).toLowerCase() + pascal.slice(1);
 }
