@@ -95,7 +95,73 @@ function convertJSON() {
         jsonToCSharp();
     } else if (lang === 'typescript') {
         jsonToTypeScript();
+    } else if (lang === 'markdown') {
+        jsonToMarkdown();
     }
+}
+
+// ... existing jsonToGo ...
+
+// --- Markdown Conversion Logic (Data Spec Mode) ---
+function jsonToMarkdown() {
+    const input = document.getElementById('input');
+
+    try {
+        let obj = JSON.parse(input.value);
+        if (!obj) throw new Error("Empty JSON");
+
+        // We only care about the structure, so if it's an array, take the first item
+        if (Array.isArray(obj)) {
+            if (obj.length > 0) obj = obj[0];
+            else throw new Error("Empty Array");
+        }
+
+        let md = "### Data Specification\n\n";
+        md += "| Field Name | Type | Example Value |\n";
+        md += "| --- | --- | --- |\n";
+
+        // Flatten and collect types
+        const specs = [];
+        collectSpecs(obj, "", specs);
+
+        specs.forEach(s => {
+            md += `| **${s.key}** | ${s.type} | \`${s.example}\` |\n`;
+        });
+
+        setOutput(md, 'markdown');
+    } catch (e) {
+        setError(e.message);
+    }
+}
+
+function collectSpecs(obj, prefix, specs) {
+    for (const key in obj) {
+        const value = obj[key];
+        const newKey = prefix ? `${prefix}.${key}` : key;
+        const type = getType(value);
+
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            // It's a nested object, recurse
+            collectSpecs(value, newKey, specs);
+        } else {
+            // It's a leaf (or array), add to spec
+            let example = JSON.stringify(value);
+            if (example && example.length > 50) example = example.substring(0, 47) + "..."; // Truncate long examples
+            specs.push({
+                key: newKey,
+                type: type,
+                example: example
+            });
+        }
+    }
+}
+
+function getType(val) {
+    if (val === null) return "Nullable";
+    if (Array.isArray(val)) return "Array";
+    return typeof val === "string" ? "String" :
+        typeof val === "number" ? "Number" :
+            typeof val === "boolean" ? "Boolean" : "Object";
 }
 
 // --- TypeScript Conversion Logic ---
