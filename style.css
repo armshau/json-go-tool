@@ -26,8 +26,17 @@ textarea {
 
 /* Ensure the code block also wraps if needed */
 pre {
-    white-space: pre-wrap !important;
-    word-break: break-word !important;
+    white-space: pre-wrap;
+    word-break: break-word;
+    /* Critical for scrolling */
+    height: 100%;
+    overflow: auto;
+}
+
+code {
+    /* Ensure code block takes full height to allow scrolling inside pre */
+    min-height: 100%;
+    box-sizing: border-box;
 }
 
 button {
@@ -63,4 +72,35 @@ button:hover {
     padding: 1rem;
     border-radius: 8px;
     margin-bottom: 2rem;
+}
+
+/* Highlight.js Line Numbers */
+.hljs-ln-numbers {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    text-align: right;
+    color: #5c6370;
+    border-right: 1px solid #5c6370;
+    padding-right: 15px !important;
+    padding-left: 5px !important;
+    vertical-align: top;
+    width: 25px;
+}
+
+/* Fix for table layout disrupting scroll */
+.hljs-ln {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.hljs-ln td {
+    padding-bottom: 0 !important;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    /* Ensure text wrapping matches line numbers */
 }

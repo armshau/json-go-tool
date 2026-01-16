@@ -3,15 +3,22 @@ function setOutput(code, language) {
     const outputElement = document.getElementById('output-code');
     const errorMsg = document.getElementById('msg-error');
     const successMsg = document.getElementById('msg-success');
+    const copyBtn = document.querySelector('#output-container button');
 
     // Set content and class
     outputElement.textContent = code;
     outputElement.className = `language-${language}`;
     outputElement.removeAttribute('data-highlighted'); // Force re-highlight
 
+    // Store raw code for copy button (to avoid copying line numbers)
+    copyBtn.dataset.rawCode = code;
+
     // Trigger syntax highlighting
     if (window.hljs) {
         hljs.highlightElement(outputElement);
+        if (window.hljs.lineNumbersBlock) {
+            hljs.lineNumbersBlock(outputElement);
+        }
     }
 
     // Show success message
@@ -21,6 +28,37 @@ function setOutput(code, language) {
 
     // Reset scroll (on the <pre> tag, which is the parent)
     outputElement.parentElement.scrollTop = 0;
+
+    // Update Output Stats
+    updateStats(code, 'output-stats');
+}
+
+function updateInputStats() {
+    const input = document.getElementById('input');
+    updateStats(input.value, 'input-stats');
+}
+
+function updateStats(text, elementId) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+
+    if (!text) {
+        el.innerText = "0 lines | 0 chars | 0 B";
+        return;
+    }
+
+    const lines = text.split(/\r\n|\r|\n/).length;
+    const chars = text.length;
+
+    // Calculate size
+    const blob = new Blob([text]);
+    const size = blob.size;
+    let sizeStr = size + " B";
+    if (size > 1024) {
+        sizeStr = (size / 1024).toFixed(1) + " KB";
+    }
+
+    el.innerText = `${lines} lines | ${chars.toLocaleString()} chars | ${sizeStr}`;
 }
 
 function setError(message) {
@@ -37,9 +75,11 @@ function setError(message) {
 }
 
 function copyToClipboard() {
-    const code = document.getElementById('output-code').textContent;
+    const btn = document.querySelector('#output-container button');
+    // Use stored raw code if available, fallback to legacy textContent
+    const code = btn.dataset.rawCode || document.getElementById('output-code').textContent;
+
     navigator.clipboard.writeText(code).then(() => {
-        const btn = document.querySelector('#output-container button');
         const originalText = btn.textContent;
         btn.textContent = "Copied!";
         setTimeout(() => btn.textContent = originalText, 2000);
